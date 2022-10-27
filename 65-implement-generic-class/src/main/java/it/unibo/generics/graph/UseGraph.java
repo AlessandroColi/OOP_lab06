@@ -3,6 +3,7 @@ package it.unibo.generics.graph;
 import it.unibo.generics.graph.api.Graph;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -22,7 +23,7 @@ public final class UseGraph {
         /*
          * Test your graph implementation(s) by calling testGraph
          */
-        testGraph(null);
+        testGraph(new GraphImpl<String>());
     }
 
     private static void testGraph(final Graph<String> graph) {
