@@ -3,9 +3,9 @@ package it.unibo.exceptions;
 import it.unibo.exceptions.fakenetwork.api.NetworkComponent;
 import it.unibo.exceptions.fakenetwork.impl.ServiceBehindUnstableNetwork;
 
-import java.io.IOException;
 import java.io.PrintStream;
 
+import java.io.IOException;
 import static it.unibo.exceptions.arithmetic.ArithmeticService.DIVIDED;
 import static it.unibo.exceptions.arithmetic.ArithmeticService.MINUS;
 import static it.unibo.exceptions.arithmetic.ArithmeticService.PLUS;
@@ -47,14 +47,26 @@ public final class UseArithmeticService {
          * This method should re-try to send message to the provided server, catching all IOExceptions,
          * until it succeeds.
          */
+    	try {
+    		server.sendData(message);
+    	}catch(IOException e) {
+    		UseArithmeticService.retrySendOnNetworkError(server,message);
+    	}
     }
 
     private static String retryReceiveOnNetworkError(final NetworkComponent server) {
-        /*
+        String s=null;
+		/*
          * This method should re-try to retrieve information from the provided server, catching all IOExceptions,
          * until it succeeds.
          */
-        return null;
+    	try {
+    		s=server.receiveResponse();
+    	}catch(IOException e) {
+    		s=UseArithmeticService.retryReceiveOnNetworkError(server);
+    	}
+    	
+        return s;
     }
 
     private static void assertEqualsAsDouble(final String expected, final String actual) {

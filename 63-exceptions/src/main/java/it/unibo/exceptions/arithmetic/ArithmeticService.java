@@ -54,40 +54,53 @@ public final class ArithmeticService {
      *
      * @return the result of the process
      */
+    
+    //Modify ArithmeticService.process(): no matter what, once the control flow exits the method, commandQueue.clear() must be executed.
+
+    //Suggestion: use finally appropriately.
+
     public String process() {
-        if (commandQueue.isEmpty()) {
-            System.out.println("No commands sent, no result available");
-        }
-        while (commandQueue.size() != 1) {
-            final var nextMultiplication = commandQueue.indexOf(TIMES);
-            final var nextDivision = commandQueue.indexOf(DIVIDED);
-            final var nextPriorityOp = nextMultiplication >= 0 && nextDivision >= 0
-                ? min(nextMultiplication, nextDivision)
-                : max(nextMultiplication, nextDivision);
-            if (nextPriorityOp >= 0) {
-                computeAt(nextPriorityOp);
-            } else {
-                final var nextSum = commandQueue.indexOf(PLUS);
-                final var nextMinus = commandQueue.indexOf(MINUS);
-                final var nextOp = nextSum >= 0 && nextMinus >= 0
-                    ? min(nextSum, nextMinus)
-                    : max(nextSum, nextMinus);
-                if (nextOp != -1) {
-                    if (commandQueue.size() < 3) {
-                        System.out.println("Inconsistent operation: " + commandQueue);
-                    }
-                    computeAt(nextOp);
-                } else if (commandQueue.size() > 1) {
-                    System.out.println("Inconsistent state: " + commandQueue);
-                }
-            }
-        }
-        final var finalResult = commandQueue.get(0);
-        final var possibleException = nullIfNumberOrException(finalResult);
-        if (possibleException != null) {
-            System.out.println("Invalid result of operation: " + finalResult);
-        }
-        return finalResult;
+    	try {
+	        if (commandQueue.isEmpty()) {
+	            throw( new IllegalStateException("No commands sent, no result available"));
+	        }
+	        
+	        while (commandQueue.size() != 1) {
+	            final var nextMultiplication = commandQueue.indexOf(TIMES);
+	            final var nextDivision = commandQueue.indexOf(DIVIDED);
+	            final var nextPriorityOp = nextMultiplication >= 0 && nextDivision >= 0
+	                ? min(nextMultiplication, nextDivision)
+	                : max(nextMultiplication, nextDivision);
+	            if (nextPriorityOp >= 0) {
+	                computeAt(nextPriorityOp);
+	            } else {
+	                final var nextSum = commandQueue.indexOf(PLUS);
+	                final var nextMinus = commandQueue.indexOf(MINUS);
+	                final var nextOp = nextSum >= 0 && nextMinus >= 0
+	                    ? min(nextSum, nextMinus)
+	                    : max(nextSum, nextMinus);
+	                if (nextOp != -1) {
+	                    if (commandQueue.size() < 3) {
+	                        throw( new IllegalStateException("Inconsistent operation: " + commandQueue));
+	                    }
+	                    computeAt(nextOp);
+	                } else if (commandQueue.size() > 1) {
+	                    throw( new IllegalStateException("Inconsistent state: " + commandQueue));
+	                }
+	            }
+	        }
+	        final var finalResult = commandQueue.get(0);
+	        final var possibleException = nullIfNumberOrException(finalResult);
+	        if (possibleException != null) {
+	            throw( new IllegalStateException("Invalid result of operation: " + finalResult));
+	        }
+	        
+	        return finalResult;
+    	} catch (Exception e) {
+    		throw(e);
+    	} finally {
+    		commandQueue.clear();
+    	}
         /*
          * The commandQueue should be cleared, no matter what, when the method exits
          * But how?
@@ -96,20 +109,20 @@ public final class ArithmeticService {
 
     private void computeAt(final int operatorIndex) {
         if (operatorIndex == 0) {
-            System.out.println("Illegal start of operation: " + commandQueue);
+            throw( new IllegalStateException("Illegal start of operation: " + commandQueue));
         }
         if (commandQueue.size() < 3) {
-            System.out.println("Not enough operands: " + commandQueue);
+            throw( new IllegalStateException("Not enough operands: " + commandQueue));
         }
         if (commandQueue.size() < operatorIndex + 1) {
-            System.out.println("Missing right operand: " + commandQueue);
+            throw( new IllegalStateException("Missing right operand: " + commandQueue));
         }
         final var rightOperand = commandQueue.remove(operatorIndex + 1);
         final var leftOperand = commandQueue.remove(operatorIndex - 1);
         if (KEYWORDS.contains(rightOperand) || KEYWORDS.contains(leftOperand)) {
-            System.out.println(
+            throw( new IllegalStateException(
                 "Expected a number, but got " + leftOperand + " and " + rightOperand + " in " + commandQueue
-            );
+            ));
         }
         final var right = parseDouble(rightOperand);
         final var left = parseDouble(leftOperand);
@@ -120,8 +133,7 @@ public final class ArithmeticService {
             case TIMES -> left * right;
             case DIVIDED -> left / right;
             default ->  {
-                System.out.println("Unknown operand " + operand);
-                yield Double.NaN;
+                throw( new IllegalStateException("Unknown operand " + operand));
             }
         };
         commandQueue.set(operatorIndex - 1, Double.toString(result));

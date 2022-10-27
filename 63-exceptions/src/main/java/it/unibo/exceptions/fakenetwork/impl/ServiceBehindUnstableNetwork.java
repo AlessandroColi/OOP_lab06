@@ -1,6 +1,7 @@
 package it.unibo.exceptions.fakenetwork.impl;
 
 import it.unibo.exceptions.arithmetic.ArithmeticService;
+import it.unibo.exceptions.arithmetic.NetworkException;
 import it.unibo.exceptions.fakenetwork.api.NetworkComponent;
 
 import java.io.IOException;
@@ -26,9 +27,7 @@ public final class ServiceBehindUnstableNetwork implements NetworkComponent {
      * @param randomSeed random generator seed for reproducibility
      */
     public ServiceBehindUnstableNetwork(final double failProbability, final int randomSeed) {
-        /*
-         * The probability should be in [0, 1[!
-         */
+        this.check(failProbability);
         this.failProbability = failProbability;
         randomGenerator = new Random(randomSeed);
     }
@@ -48,15 +47,14 @@ public final class ServiceBehindUnstableNetwork implements NetworkComponent {
     }
 
     @Override
-    public void sendData(final String data) throws IOException {
+    public void sendData(final String data) throws NetworkException {
         accessTheNework(data);
         final var exceptionWhenParsedAsNumber = nullIfNumberOrException(data);
         if (KEYWORDS.contains(data) || exceptionWhenParsedAsNumber == null) {
             commandQueue.add(data);
         } else {
             final var message = data + " is not a valid keyword (allowed: " + KEYWORDS + "), nor is a number";
-            System.out.println(message);
-            commandQueue.clear();
+            throw new IllegalArgumentException(message, exceptionWhenParsedAsNumber);
             /*
              * This method, in this point, should throw an IllegalStateException.
              * Its cause, however, is the previous NumberFormatException.
@@ -68,7 +66,7 @@ public final class ServiceBehindUnstableNetwork implements NetworkComponent {
     }
 
     @Override
-    public String receiveResponse() throws IOException {
+    public String receiveResponse() throws NetworkException {
         accessTheNework(null);
         try {
             return new ArithmeticService(Collections.unmodifiableList(commandQueue)).process();
@@ -77,10 +75,16 @@ public final class ServiceBehindUnstableNetwork implements NetworkComponent {
         }
     }
 
-    private void accessTheNework(final String message) throws IOException {
+    private void accessTheNework(final String message) throws NetworkException {
         if (randomGenerator.nextDouble() < failProbability) {
-            throw new IOException("Generic I/O error");
+            throw new NetworkException("Generic I/O error");
         }
+    }
+    
+    private void check(double n) {
+    	if(Double.compare(n, 0)<0 || Double.compare(n, 1)>=0 ){
+    		throw(new IllegalArgumentException("impossible value for probability"));
+    	}
     }
 
 }

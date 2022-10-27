@@ -1,4 +1,4 @@
-# Exceptions playground
+System.out.println# Exceptions playground
 
 ### Check arguments correctness and throw RuntimeExceptions
 
